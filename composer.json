@@ -1,7 +1,7 @@
 {
-    "name" : "elastic/elasticsearch-chatgpt-php",
+    "name" : "ezimuel/elasticsearch-chatgpt-php",
     "description" : "Elasticsearch ChatGPT for PHP",
-    "homepage": "https://github.com/elastic/elasticsearch-chatgpt-php",
+    "homepage": "https://github.com/ezimuel/elasticsearch-chatgpt-php",
     "keywords" : [
         "elastic",
         "search",
