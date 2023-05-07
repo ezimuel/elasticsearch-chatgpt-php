@@ -21,11 +21,12 @@ $elasticsearch = ClientBuilder::create()
 
 $chatGPT = new ChatGPT($elasticsearch, $openAI);
 
-$result = $chatGPT->search('stocks', 'Return the first 10 stock');
+$result = $chatGPT->search('stocks', 'Return the first 10 documents of 2017');
+
 //$result = $chatGPT->search('stocks', 'Return all the different stock name. Do not limit the result.');
 //$result = $chatGPT->search('stocks', 'Return the highest value of the field "high" for each stock in 2015.');
 //$result = $chatGPT->search('stocks', 'Return the highest value of the field "high" for each stock in 2015. Return all the results without limit.');
 //$result = $chatGPT->search('stocks', 'Give me the highest value of the field "high" for all the stock MON in 2014. Return only one value.');
 
-print_r($result->asArray());
+print_r($result->asArray()['hits']['hits']);
 printf("--- Last query:\n%s\n", $chatGPT->getLastQuery());

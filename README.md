@@ -25,7 +25,7 @@ You need to have an Elasticsearch server running or use the [Elastic Cloud](http
 
 Ypu can read [here](https://github.com/elastic/elasticsearch-php#configuration) how to start a server using Docker or using the Elastic Cloud environment.
 
-## Example for using the library
+## Example of using the library
 
 Here we provided an example that is also available in the [examples/test.php](examples/test.php) script.
 
@@ -63,7 +63,7 @@ $elasticsearch = ClientBuilder::create()
     ->build();
 
 $chatGPT = new ChatGPT($elasticsearch, $openAI);
-$result = $chatGPT->search('stocks', 'Return the first 10 stock');
+$result = $chatGPT->search('stocks', 'Return the first 10 documents of 2017');
 
 // Print the Elasticsearch result
 print_r($result->asArray());
@@ -78,23 +78,23 @@ containing 5 years of stock of 500 Fortune companies, starting from February 201
 
 The dataset ihas the following mapping:
 
-```
+```json
 {
     "stocks": {
         "mappings": {
             "properties": {
-                "close":{"type":"float"},
-                "date":{"type":"date"},
-                "high":{"type":"float"},
-                "low":{"type":"float"},
-                "name":{
-                    "type":"text",
-                    "fields":{
-                        "keyword":{"type":"keyword","ignore_above":256}
+                "close": {"type":"float"},
+                "date" : {"type":"date"},
+                "high" : {"type":"float"},
+                "low"  : {"type":"float"},
+                "name" : {
+                    "type": "text",
+                    "fields": {
+                        "keyword":{"type":"keyword", "ignore_above":256}
                     }
                 },
-                "open":{"type":"float"},
-                "volume":{"type":"long"}
+                "open"  : {"type":"float"},
+                "volume": {"type":"long"}
             }
         }
     }
@@ -110,6 +110,38 @@ For the Elasticsearch DSL produced by ChatGPT we use the MD5 of the prompt reque
 
 If you want to disable the cache, e.g. you changed the mapping of the index, you
 can pass `$cache = false` in the third optional parameter of the `search()` function.
+
+## Multilanguage support
+
+A very nice feature of ChatGPT is the ability to specify questions in different languages.
+That means, you can use this library and specify the query in different natural languges, like
+Italian, Spanish, French, German, etc.
+
+Here an example:
+
+```php
+# English
+$result = $chatGPT->search('stocks', 'Return the first 10 documents of 2017');
+# Italian
+$result = $chatGPT->search('stocks', 'Restituisci i primi 10 documenti del 2017');
+# Spanish
+$result = $chatGPT->search('stocks', 'Devuelve los 10 primeros documentos de 2017');
+# French
+$result = $chatGPT->search('stocks', 'Retourner les 10 premiers documents de 2017');
+# German
+$result = $chatGPT->search('stocks', 'Senden Sie die ersten 10 Dokumente des Jahres 2017 zurück');
+```
+
+All the previous search have the same results producing the following Elasticsearch query (more or less):
+
+```json
+{"size":10,"query":{"range":{"date":{"gte":"2017-01-01","lt":"2018-01-01"}}}}
+```
+
+You can see the [examples/multilanguage.php](examples/multilanguage.php) script for more information.
+
+**NOTE**: It is important to know that ChatGPT is an LLM that has been optimized for English.
+That means, the best results are obtained using queries entered in English.
 
 
 ## Limitations

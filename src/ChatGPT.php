@@ -25,7 +25,7 @@ use OpenAI\Contracts\ClientContract as OpenAIClient;
 class ChatGPT
 {
     const CACHE_DIR = __DIR__ . '/../cache';
-    const BASE_PROMPT_CHATGPT = "Given the mapping delimited by triple backticks ```%s``` translate the question delimited by triple quotes in a valid Elasticsearch DSL query \"\"\"%s\"\"\". Remove the triple backticks in the answer.";
+    const BASE_PROMPT_CHATGPT = "Given the mapping delimited by triple backticks ```%s``` translate the text delimited by triple quotes in a valid Elasticsearch DSL query \"\"\"%s\"\"\". Give me only the json code part of the answer. Compress the json output removing spaces.";
 
     /** 
      * OpenAI client
@@ -94,10 +94,19 @@ class ChatGPT
             $query = $this->chatGpt($prompt, $mapping);
         }
         $this->lastQuery = $query;
-        return $this->esClient->search([
-            'index' => $index,
-            'body' => $query
-        ]);
+        try {
+            return $this->esClient->search([
+                'index' => $index,
+                'body' => $query
+            ]);
+        } catch (ElasticsearchException $e) {
+            $this->deleteCachePrompt($prompt);
+            throw new InvalidElasticsearchException(sprintf(
+                "The query %s produced an Elasticsearch error: %s",
+                $prompt,
+                $e->getMessage()
+            ));
+        }
     }
 
     /**
@@ -142,7 +151,7 @@ class ChatGPT
         ]);
         $answer = $response->choices[0]->message->content; 
         if (!empty($answer)) {
-            $this->setCachePrompt($prompt, $answer);
+            $this->setCachePrompt($query, $answer);
             return $answer;            
         } 
         throw new InvalidChatGPTException(sprintf(
@@ -163,7 +172,7 @@ class ChatGPT
     protected function setCacheMapping(string $index, string $mapping): bool
     {
         $filename = sprintf("%s/%s.json", $this->cacheDir, $index);
-        return file_put_contents($filename, $mapping) !== false;
+        return file_put_contents($filename, $mapping, LOCK_EX) !== false;
     }
 
     protected function getCachePrompt(string $prompt): string|false
@@ -178,6 +187,14 @@ class ChatGPT
     protected function setCachePrompt(string $prompt, string $query): bool
     {
         $filename = sprintf("%s/%s.json", $this->cacheDir, md5($prompt));
-        return file_put_contents($filename, $query) !== false;
+        return file_put_contents($filename, $query, LOCK_EX) !== false;
+    }
+
+    protected function deleteCachePrompt(string $prompt): void
+    {
+        $filename = sprintf("%s/%s.json", $this->cacheDir, md5($prompt));
+        if (file_exists($filename)) {
+            unlink($filename);
+        }
     }
 }
