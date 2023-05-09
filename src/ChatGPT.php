@@ -102,8 +102,9 @@ class ChatGPT
         } catch (ElasticsearchException $e) {
             $this->deleteCachePrompt($prompt);
             throw new InvalidElasticsearchException(sprintf(
-                "The query %s produced an Elasticsearch error: %s",
+                "The query \"%s\" translated in \"%s\" produced an Elasticsearch error: %s",
                 $prompt,
+                $query,
                 $e->getMessage()
             ));
         }
