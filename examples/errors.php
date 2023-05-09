@@ -21,12 +21,12 @@ $elasticsearch = ClientBuilder::create()
 
 $chatGPT = new ChatGPT($elasticsearch, $openAI);
 
-$result = $chatGPT->search('stocks', 'Return the first 10 documents of 2017');
-//$result = $chatGPT->search('stocks', 'Return the first 30 names of all the different stock names'); 
-//$result = $chatGPT->search('stocks', 'Return the max value of the field "high" for each stock in 2015');
-//$result = $chatGPT->search('stocks', 'Return the average value of the field "high" for each stock in 2015');
-//$result = $chatGPT->search('stocks', 'Return the max value of the field "high" for all the documents with name MON in 2014');
-//$result = $chatGPT->search('stocks', 'Return the documents that have the difference between close and open fields > 20');
+# error failed to parse date field [2015-01-01] with format [yyyy]
+# query DSL: {"from":0,"size":10,"query":{"bool":{"must":[{"range":{"date":{"gte":"2015-01-01","lte":"2015-12-31","format":"yyyy"}}},{"range":{"date":{"gte":"2017-01-01","lte":"2017-12-31","format":"yyyy"}}}]}}}
+$result = $chatGPT->search('stocks', 'Return the first 10 documents of 2017 and 2015');
+
+# correct sentence
+//$result = $chatGPT->search('stocks', 'Return the first 10 documents with year 2017 and 2015 in "date" field');
 
 print_r($result->asArray());
 printf("--- Last query:\n%s\n", $chatGPT->getLastQuery());
